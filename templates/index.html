@@ -272,97 +272,6 @@
         .empty-state p  { font-size: 0.85em; color: var(--text-muted); }
         .error-state p  { font-size: 0.9em; color: #dc2626; }
 
-        /* ── Upload panel ── */
-        .upload-toggle {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 14px;
-        }
-        .btn-upload-open {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--primary-light);
-            color: white;
-            border: none;
-            padding: 9px 18px;
-            border-radius: var(--radius);
-            font-size: 0.88em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-upload-open:hover { background: var(--primary); }
-
-        .upload-panel {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-md);
-            padding: 20px 22px;
-            margin-bottom: 22px;
-            display: none;
-        }
-        .upload-panel.open { display: block; }
-        .upload-panel h3 {
-            font-size: 0.95em;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 14px;
-        }
-        .upload-fields {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: flex-end;
-        }
-        .upload-fields label {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            font-size: 0.82em;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-        .upload-fields input[type="text"],
-        .upload-fields input[type="file"] {
-            padding: 8px 12px;
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.9em;
-            background: var(--bg);
-            color: var(--text-primary);
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .upload-fields input[type="text"] { min-width: 180px; }
-        .upload-fields input[type="file"] { min-width: 220px; cursor: pointer; }
-        .upload-fields input:focus { border-color: var(--accent); }
-        .btn-upload-submit {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 9px 20px;
-            border-radius: var(--radius);
-            font-size: 0.88em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-        .btn-upload-submit:hover { background: #2563eb; }
-        .btn-upload-submit:disabled { background: var(--text-muted); cursor: not-allowed; }
-        .upload-status {
-            margin-top: 10px;
-            font-size: 0.85em;
-            min-height: 20px;
-        }
-        .upload-status.ok  { color: var(--success); }
-        .upload-status.err { color: #dc2626; }
-
         /* ── Footer ── */
         .site-footer {
             text-align: center;
@@ -390,38 +299,6 @@
 </header>
 
 <div class="container">
-
-    <!-- 上傳按鈕 -->
-    <div class="upload-toggle">
-        <button class="btn-upload-open" onclick="toggleUpload()">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-            </svg>
-            上傳檔案
-        </button>
-    </div>
-
-    <!-- 上傳面板 -->
-    <div class="upload-panel" id="uploadPanel">
-        <h3>上傳本機檔案</h3>
-        <div class="upload-fields">
-            <label>
-                選擇檔案
-                <input type="file" id="uploadFileInput">
-            </label>
-            <label>
-                類別名稱
-                <input type="text" id="uploadCategory" placeholder="例：業務通報">
-            </label>
-            <button class="btn-upload-submit" id="uploadBtn" onclick="doUpload()">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                </svg>
-                確認上傳
-            </button>
-        </div>
-        <div class="upload-status" id="uploadStatus"></div>
-    </div>
 
     <!-- 搜尋與過濾 -->
     <div class="controls-card" id="controlsCard">
@@ -609,49 +486,6 @@
 
     document.getElementById('searchInput').addEventListener('input', renderFiles);
     document.getElementById('categorySelect').addEventListener('change', renderFiles);
-
-    function toggleUpload() {
-        const panel = document.getElementById('uploadPanel');
-        panel.classList.toggle('open');
-    }
-
-    async function doUpload() {
-        const fileInput = document.getElementById('uploadFileInput');
-        const category  = document.getElementById('uploadCategory').value.trim();
-        const status    = document.getElementById('uploadStatus');
-        const btn       = document.getElementById('uploadBtn');
-
-        if (!fileInput.files[0]) { status.className = 'upload-status err'; status.textContent = '請選擇檔案'; return; }
-        if (!category)           { status.className = 'upload-status err'; status.textContent = '請填寫類別名稱'; return; }
-
-        btn.disabled = true;
-        status.className = 'upload-status';
-        status.textContent = '上傳中…';
-
-        try {
-            const form = new FormData();
-            form.append('file', fileInput.files[0]);
-            form.append('category', category);
-
-            const res  = await fetch('/api/upload', { method: 'POST', body: form });
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-                status.className = 'upload-status ok';
-                status.textContent = `✓ 上傳成功：${data.name}`;
-                fileInput.value = '';
-                await loadFiles();
-            } else {
-                status.className = 'upload-status err';
-                status.textContent = `上傳失敗：${data.detail || '未知錯誤'}`;
-            }
-        } catch (e) {
-            status.className = 'upload-status err';
-            status.textContent = '上傳失敗，請確認網路連線';
-        } finally {
-            btn.disabled = false;
-        }
-    }
 
     window.onload = loadFiles;
 </script>
