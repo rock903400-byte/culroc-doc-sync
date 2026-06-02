@@ -11,7 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
-from firebase_admin import firestore, storage
+from firebase_admin import credentials, firestore, storage
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,9 +29,14 @@ templates = Jinja2Templates(directory="templates")
 
 STORAGE_BUCKET = "ceremonial-tea-397301.firebasestorage.app"
 
+_SA_FILE = "config/firebase/service-account.json"
+
 if not firebase_admin._apps:
     try:
-        firebase_admin.initialize_app(options={"storageBucket": STORAGE_BUCKET})
+        if os.path.exists(_SA_FILE):
+            firebase_admin.initialize_app(credentials.Certificate(_SA_FILE), {"storageBucket": STORAGE_BUCKET})
+        else:
+            firebase_admin.initialize_app(options={"storageBucket": STORAGE_BUCKET})
     except Exception as e:
         print(f"Firebase Init Warning: {e}")
 
