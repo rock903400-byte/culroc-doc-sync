@@ -1,0 +1,28 @@
+# 敏感資訊 - 絕對不可上傳
+.env
+config/firebase/service-account.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# 暫存檔案
+temp_*.doc
+temp_*.docx
+temp_*.pdf
+*.tmp
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

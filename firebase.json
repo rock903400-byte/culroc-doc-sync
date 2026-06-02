@@ -1,0 +1,22 @@
+{
+  "firestore": {
+    "rules": "config/firebase/firestore.rules"
+  },
+  "hosting": {
+    "public": "public_placeholder",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "downloader-api",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}
