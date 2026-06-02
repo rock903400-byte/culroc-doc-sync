@@ -10,8 +10,8 @@ import firebase_admin
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, HTTPException, Query
-from firebase_admin import firestore
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
+from firebase_admin import firestore, storage
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,10 +27,11 @@ FILE_LIST_PAGE = TARGET_BASE + "?page_id=15"
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
+STORAGE_BUCKET = "ceremonial-tea-397301.firebasestorage.app"
+
 if not firebase_admin._apps:
     try:
-        # 在 Cloud Run 中，通常不需要參數會自動抓環境
-        firebase_admin.initialize_app()
+        firebase_admin.initialize_app(options={"storageBucket": STORAGE_BUCKET})
     except Exception as e:
         print(f"Firebase Init Warning: {e}")
 
@@ -213,3 +214,29 @@ async def get_files():
         return {"files": files}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"讀取資料庫失敗: {e}")
+
+
+@app.post("/api/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    category: str = Form(...)
+):
+    if db is None:
+        raise HTTPException(status_code=500, detail="資料庫未初始化")
+    try:
+        content = await file.read()
+        bucket = storage.bucket()
+        blob = bucket.blob(f"files/{category}/{file.filename}")
+        blob.upload_from_string(content, content_type=file.content_type or "application/octet-stream")
+        blob.make_public()
+
+        db.collection("my_files").add({
+            "name": file.filename,
+            "category": category,
+            "download_url": blob.public_url,
+            "sync_at": firestore.SERVER_TIMESTAMP,
+            "size_mb": round(len(content) / (1024 * 1024), 2)
+        })
+        return {"success": True, "name": file.filename, "download_url": blob.public_url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"上傳失敗: {e}")
