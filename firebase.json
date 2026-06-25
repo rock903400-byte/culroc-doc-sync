@@ -14,7 +14,7 @@
         "source": "**",
         "run": {
           "serviceId": "downloader-api",
-          "region": "us-central1"
+          "region": "asia-east1"
         }
       }
     ]

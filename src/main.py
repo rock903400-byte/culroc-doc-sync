@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -198,10 +199,34 @@ def _scrape_files(html: str, base_url: str) -> list[dict]:
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+# 記憶體快取設計 (TTL: 300秒 / 5分鐘)
+class SimpleCache:
+    def __init__(self, ttl: int = 300):
+        self.ttl = ttl
+        self.data = None
+        self.expire_at = 0
+
+    def get(self):
+        if self.data is not None and time.time() < self.expire_at:
+            return self.data
+        return None
+
+    def set(self, data):
+        self.data = data
+        self.expire_at = time.time() + self.ttl
+
+files_cache = SimpleCache(ttl=300)
+
+
 @app.get("/api/files")
 async def get_files():
     if db is None:
         raise HTTPException(status_code=500, detail="資料庫未初始化")
+    
+    # 嘗試從快取中取得資料
+    cached_files = files_cache.get()
+    if cached_files is not None:
+        return {"files": cached_files}
     
     try:
         # 從 Firestore 讀取所有已同步的檔案
@@ -216,6 +241,8 @@ async def get_files():
                 "download_url": data.get("download_url")
             })
             
+        # 寫入快取
+        files_cache.set(files)
         return {"files": files}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"讀取資料庫失敗: {e}")

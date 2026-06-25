@@ -76,7 +76,7 @@ gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/downloader-api
 gcloud run deploy downloader-api \
   --image gcr.io/YOUR_PROJECT_ID/downloader-api \
   --platform managed \
-  --region us-central1 \
+  --region asia-east1 \
   --allow-unauthenticated \
   --set-env-vars CULROC_USERNAME=201,CULROC_PASSWORD=a0980463
 ```
