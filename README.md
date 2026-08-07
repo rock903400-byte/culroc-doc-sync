@@ -1,4 +1,6 @@
-# director
+# culroc-doc-sync
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > 理事管理後台 — 行動裝置友善之文件下載代理系統
 
